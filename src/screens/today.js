@@ -12,6 +12,7 @@ import { h, icon, openSheet, runSegments, tilt, toast } from '../ui/kit.js';
 import { createRing } from '../three/scenes.js';
 import { renderWorkout, stretchSegments } from './workout.js';
 import { sfx } from '../audio/sfx.js';
+import { dailyTargets, dayTotals } from '../core/food.js';
 
 export const stepGoal = (state, date = today()) => {
   const v = todayView(state, date);
@@ -131,6 +132,10 @@ export function checkin(state, now, view) {
   stepsIn.addEventListener('change', saveSteps);
   card.append(h('div', { class: 'ci-row' }, h('div', { class: 'ci-label' }, icon('steps', 20), h('div', null, h('b', null, 'Steps'), label)), stepsIn, h('button', { class: 'btn small', onclick: saveSteps }, 'Save')),
     h('div', { class: 'steps-track' }, bar), h('p', { class: 'muted small' }, stepsNote));
+
+  // food
+  const ft = dayTotals(state, now), tg = dailyTargets(state);
+  card.append(h('a', { class: 'ci-row food-link', href: '#/food' }, h('div', { class: 'ci-label' }, icon('food', 20), h('div', null, h('b', null, 'Food'), h('span', { class: 'muted' }, ft.n ? `${ft.kcal.toLocaleString()} of about ${tg.kcal.toLocaleString()} kcal` : 'Nothing logged yet'))), h('span', { class: 'btn small' }, 'Log food')));
 
   // weight
   const wt = state.weights[now];

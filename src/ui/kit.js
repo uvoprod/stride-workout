@@ -32,6 +32,7 @@ const P = {
   week: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   progress: '<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/>',
   journal: '<path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v15L12 17l-6.5 3V5A1.5 1.5 0 0 1 6 3.5z"/><path d="M9 8h6M9 11.5h4"/>',
+  food: '<path d="M6 3v7a2.5 2.5 0 0 0 2.5 2.5M11 3v7a2.5 2.5 0 0 1-2.5 2.5M8.5 3v18M17.5 21V3c-2.2 1.4-3.5 4-3.5 7.5V14h3.5"/>',
   me: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',

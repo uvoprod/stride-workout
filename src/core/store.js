@@ -11,6 +11,7 @@ const defaults = () => ({
   journal: {},   // date -> { energy, sleep, mood, note, wentWell, prompt }
   habits: {},    // date -> { steps:bool, water:bool, protein:bool, sleep:bool, veg:bool }
   steps: {},     // date -> number
+  food: {},      // date -> [{ id, meal, name, portion, kcal, protein, carbs, fat, source, confidence }]
   ate: {},       // date -> true  ("ate too much" reset used)
   badges: {},    // id -> date unlocked
   prLog: [],     // { date, ex, kg, reps }

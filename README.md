@@ -23,8 +23,12 @@ Tip: add `?today=2026-12-01` to the URL to pretend it is another day (handy for 
 | `phases.js` | phase descriptions and RPE guide |
 | `content.js` | quotes, journal prompts, habits, "ate too much" messages |
 | `badges.js` | milestone badges |
+| `foods.js` | food logger: AI models, deficit limits, AI prompt, quick-add food list |
 
 `tools/generate-weeks.mjs` produced the week files once; running `npm run weeks` regenerates (and overwrites) them.
 
 ## Safety
 General guidance for healthy teenagers, not medical advice. Stop anything that causes sharp or joint pain.
+
+## Food logger
+Describe a meal (or add a photo) and Claude estimates calories and macros. It needs your own Claude API key (Food tab → Targets & AI). The key is kept only in this browser and is not part of the JSON export. Without a key you can still log from the built-in Indian food list or by hand.

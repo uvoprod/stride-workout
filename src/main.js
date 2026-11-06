@@ -9,6 +9,7 @@ import { renderWeek } from './screens/week.js';
 import { renderProgress } from './screens/progress.js';
 import { renderJournal } from './screens/journal.js';
 import { renderMe } from './screens/me.js';
+import { renderFood } from './screens/food.js';
 import { renderOnboarding } from './screens/onboarding.js';
 import { renderWorkout } from './screens/workout.js';
 import { getWeek } from './config/weeks/index.js';
@@ -29,6 +30,7 @@ const TABS = [
   { id: 'today', label: 'Today', icon: 'today' },
   { id: 'week', label: 'Week', icon: 'week' },
   { id: 'progress', label: 'Progress', icon: 'progress' },
+  { id: 'food', label: 'Food', icon: 'food' },
   { id: 'journal', label: 'Journal', icon: 'journal' },
   { id: 'me', label: 'Me', icon: 'me' },
 ];
@@ -69,6 +71,7 @@ function route() {
     renderWorkout(holder, Number(a), b);
   } else if (page === 'week') renderWeek(main);
   else if (page === 'progress') renderProgress(main);
+  else if (page === 'food') renderFood(main);
   else if (page === 'journal') renderJournal(main);
   else if (page === 'me') renderMe(main);
   else { active = 'today'; renderToday(main, cleanups); }
