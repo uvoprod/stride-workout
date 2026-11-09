@@ -3,6 +3,8 @@ import { WEEKDAYS, today } from '../core/dates.js';
 import { safetyNote } from '../config/content.js';
 import { h, icon, toast } from '../ui/kit.js';
 import { setSound } from '../audio/sfx.js';
+import { parseSteps } from '../core/importSteps.js';
+import { applySteps } from '../core/stepsApply.js';
 
 export function renderMe(root) {
   const state = store.get();
@@ -56,6 +58,24 @@ export function renderMe(root) {
   const haptics = toggleRow('Vibration', 'Small buzz on set check-offs (phones)', state.settings.haptics, (v) => store.update((s) => { s.settings.haptics = v; }));
   wrap.append(h('section', { class: 'card' }, h('div', { class: 'sec-head' }, h('h2', null, 'Feel')), sound, haptics));
 
+
+  // steps from a watch
+  const stepFile = h('input', { type: 'file', accept: '.csv,.json,.txt,application/json,text/csv', hidden: true, 'aria-label': 'Choose a steps file' });
+  stepFile.addEventListener('change', async () => {
+    const f = stepFile.files?.[0]; if (!f) return;
+    try { const n = applySteps(parseSteps(await f.text())); toast(`Imported steps for ${n} day${n === 1 ? '' : 's'}`); } catch (e) { toast(e.message || 'Could not import that file.', 4000); }
+    stepFile.value = '';
+  });
+  const link = `${location.origin}${location.pathname}#/import?steps=NUMBER`;
+  wrap.append(h('section', { class: 'card' }, h('div', { class: 'sec-head' }, h('h2', null, 'Steps from your watch')),
+    h('p', { class: 'muted' }, 'Automatic Fitbit sync is not possible right now: Fitbit switched its old data connection off in November 2026, and Google\u2019s replacement needs a Google review. Two ways to avoid typing:'),
+    h('div', { class: 'eyebrow' }, '1. Import a file'),
+    h('p', { class: 'muted small' }, 'Export your steps from Fitbit / Google Health (or any spreadsheet with Date and Steps columns, CSV or JSON), then pick the file. Days in the file replace the steps already saved for those days.'),
+    h('div', { class: 'row-actions' }, h('button', { class: 'btn', onclick: () => stepFile.click() }, icon('upload', 18), ' Import steps file'), stepFile),
+    h('div', { class: 'eyebrow' }, '2. Automate it'),
+    h('p', { class: 'muted small' }, 'Any phone automation (iPhone Shortcuts, Android Tasker or Routines) can open this link with your step count in place of NUMBER. The app asks you to confirm before saving.'),
+    h('button', { class: 'btn', onclick: async () => { try { await navigator.clipboard.writeText(link); toast('Link copied'); } catch { toast(link, 6000); } } }, 'Copy link')));
+
   // data
   const file = h('input', { type: 'file', accept: 'application/json,.json', hidden: true, 'aria-label': 'Choose backup file' });
   file.addEventListener('change', async () => {
@@ -65,13 +85,14 @@ export function renderMe(root) {
       toast('Backup imported'); location.hash = '#/today'; location.reload();
     } catch (e) { toast(e.message || 'Could not import that file.'); }
   });
-  wrap.append(h('section', { class: 'card' }, h('div', { class: 'sec-head' }, h('h2', null, 'Your data')),
+  const lastB = h('p', { class: 'muted small' }, state.settings.lastBackup ? `Last backup: ${state.settings.lastBackup}` : 'You have not made a backup yet.');
+  wrap.append(h('section', { class: 'card' }, h('div', { class: 'sec-head' }, h('h2', null, 'Your data')), lastB,
     h('p', { class: 'muted' }, 'Everything is saved on this device only. Export a backup now and then, and use it to move to a new phone.'),
     h('div', { class: 'row-actions' },
       h('button', { class: 'btn', onclick: () => {
         const blob = new Blob([store.exportJSON()], { type: 'application/json' });
         const a = h('a', { href: URL.createObjectURL(blob), download: `stride-backup-${today()}.json` });
-        document.body.append(a); a.click(); a.remove(); toast('Backup downloaded');
+        document.body.append(a); a.click(); a.remove(); store.update((st) => { st.settings.lastBackup = today(); }); toast('Backup downloaded'); lastB.textContent = 'Last backup: today';
       } }, icon('download', 18), ' Export JSON'),
       h('button', { class: 'btn', onclick: () => file.click() }, icon('upload', 18), ' Import JSON'), file),
     h('button', { class: 'link-btn danger', onclick: () => {

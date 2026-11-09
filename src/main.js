@@ -14,6 +14,9 @@ import { renderOnboarding } from './screens/onboarding.js';
 import { renderWorkout } from './screens/workout.js';
 import { getWeek } from './config/weeks/index.js';
 import { registerSW } from 'virtual:pwa-register';
+import { applySteps } from './core/stepsApply.js';
+import { openSheet, toast } from './ui/kit.js';
+import { today } from './core/dates.js';
 
 // theme → CSS variables
 const root = document.documentElement;
@@ -50,6 +53,21 @@ mountRestBar(app);
 paintSound();
 
 let cleanups = [];
+
+// #/import?steps=8421&date=2026-11-08  (for phone automations). Always asks before saving.
+function handleImportLink() {
+  const q = new URLSearchParams(location.hash.split('?')[1] || '');
+  const steps = parseInt(q.get('steps'), 10);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(q.get('date') || '') ? q.get('date') : today();
+  history.replaceState(null, '', location.pathname + location.search + '#/today');
+  if (!store.get().profile) return;
+  if (!(steps > 0 && steps < 100000)) { toast('That link did not include a valid step count.'); return; }
+  const sh = openSheet('Save steps?', [
+    h('p', null, `Set steps for ${date} to ${steps.toLocaleString()}?`),
+    h('button', { class: 'btn primary big', onclick: () => { applySteps({ [date]: steps }); sh.close(); toast('Steps saved'); route(); } }, 'Save steps'),
+    h('button', { class: 'link-btn', onclick: () => sh.close() }, 'Cancel'),
+  ]);
+}
 function route() {
   cleanups.forEach((c) => c());
   cleanups = [];
@@ -61,6 +79,7 @@ function route() {
     return;
   }
   nav.hidden = topbar.hidden = false;
+  if (location.hash.startsWith('#/import')) setTimeout(handleImportLink, 0);
   const [, page = 'today', a, b] = location.hash.split('/');
   let active = page;
   if (page === 'session' && getWeek(Number(a))?.days[b]) {
@@ -86,3 +105,5 @@ addEventListener('hashchange', route);
 route();
 addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 registerSW({ immediate: true });
+// ask the browser not to evict saved data
+try { navigator.storage?.persist?.(); } catch { /* ignore */ }

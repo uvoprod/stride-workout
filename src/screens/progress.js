@@ -8,6 +8,7 @@ import { checkBadges, history, jumpSeries, liftSeries, liftsWithData, waistDue, 
 import { h, icon, lineChart, tilt, toast } from '../ui/kit.js';
 import { openBadge } from '../ui/badgeview.js';
 import { sfx } from '../audio/sfx.js';
+import { energyCard } from './energy.js';
 
 let lift = null;
 
@@ -42,6 +43,7 @@ export function renderProgress(root) {
     sfx.tick(); toast('Logged'); rerender();
   } }, 'Save')));
   wrap.append(wCard);
+  wrap.append(energyCard(state));
 
   // ── waist ──
   const wa = waistSeries(state);

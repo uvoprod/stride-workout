@@ -4,7 +4,7 @@ import { quotes, resetMessages, resetAction, stepsNote } from '../config/content
 import { mobility } from '../config/stretches.js';
 import { phaseOfWeek } from '../config/phases.js';
 import { getWeek } from '../config/weeks/index.js';
-import { addDays, dayOfYear, fmtDay, fmtShort, iso, parse, today } from '../core/dates.js';
+import { addDays, dayOfYear, diffDays, fmtDay, fmtShort, iso, parse, today } from '../core/dates.js';
 import { fmtNum } from '../core/util.js';
 import { TOTAL_WEEKS, isDone, todayView, weekDoneCount } from '../core/schedule.js';
 import { habitStreak, progressCallout, sessionStreak, waistDue, checkBadges, programPct } from '../core/logic.js';
@@ -61,6 +61,13 @@ export function renderToday(root, cleanups) {
   // quote
   const q = quotes[(dayOfYear(now) + (state.profile.name?.length || 0)) % quotes.length];
   wrap.append(h('blockquote', { class: 'quote' }, q));
+
+  // gentle backup reminder once there is real data to lose
+  const lb = state.settings.lastBackup;
+  const hasData = Object.keys(state.sessions).length || Object.keys(state.food || {}).length;
+  if (hasData && (!lb || diffDays(now, lb) > 7)) {
+    wrap.append(h('div', { class: 'note-card' }, h('b', null, 'Back up your progress.'), h('span', null, ' Your data lives only on this phone. One tap saves a copy you can restore any time.'), h('a', { class: 'link-btn', href: '#/me' }, 'Open backup')));
+  }
 
   // body by state
   if (view.kind === 'before') {
