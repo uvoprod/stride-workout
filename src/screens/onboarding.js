@@ -8,7 +8,7 @@ export function renderOnboarding(root, done) {
   const sel = { trainDays: [1, 3, 5], optionalDay: 6 };
   const name = h('input', { class: 'txt-in', type: 'text', placeholder: 'Your name (optional)', 'aria-label': 'Name' });
   const date = h('input', { class: 'txt-in', type: 'date', value: today(), 'aria-label': 'Start date' });
-  const weight = h('input', { class: 'txt-in', type: 'text', inputmode: 'decimal', value: '90', 'aria-label': 'Starting weight in kg' });
+  const weight = h('input', { class: 'txt-in', type: 'text', inputmode: 'decimal', placeholder: 'Optional, e.g. 85', 'aria-label': 'Starting weight in kg' });
   const days = h('div', { class: 'wd-pick' });
   const draw = () => days.replaceChildren(...[1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { class: `wd${sel.trainDays.includes(d) ? ' core' : ''}${sel.optionalDay === d ? ' opt' : ''}`, 'aria-pressed': String(sel.trainDays.includes(d) || sel.optionalDay === d), onclick: () => {
     if (sel.trainDays.includes(d)) { if (sel.trainDays.length > 3) sel.trainDays = sel.trainDays.filter((x) => x !== d); }
@@ -29,7 +29,7 @@ export function renderOnboarding(root, done) {
     h('button', { class: 'btn primary big', onclick: () => {
       sfx.unlock(); sfx.set(3);
       store.update((s) => {
-        s.profile = { name: name.value.trim(), startDate: date.value || today(), startWeight: parseFloat(weight.value.replace(',', '.')) || 90, trainDays: sel.trainDays, optionalDay: sel.optionalDay };
+        s.profile = { name: name.value.trim(), startDate: date.value || today(), startWeight: parseFloat(weight.value.replace(',', '.')) || null, trainDays: sel.trainDays, optionalDay: sel.optionalDay };
       });
       screen.remove();
       done();

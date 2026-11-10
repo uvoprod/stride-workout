@@ -26,6 +26,7 @@ export function workoutKcal(state, date, kg) {
 
 export function dayEnergy(state, date) {
   const t = dailyTargets(state);
+  if (!t.ready) return { date, base: 0, steps: 0, workout: 0, sessions: 0, burn: 0, eaten: dayTotals(state, date).kcal, gap: 0, logged: false };
   const base = t.bmr * 1.2;
   const stepsKcal = Math.max(0, (state.steps[date] || 0) - 3000) * 0.04 * (t.kg / 70);
   const w = workoutKcal(state, date, t.kg);
@@ -35,6 +36,7 @@ export function dayEnergy(state, date) {
 }
 
 export function energyReport(state, now = today(), span = 7) {
+  if (!dailyTargets(state).ready) return { ready: false };
   const rows = Array.from({ length: span }, (_, i) => dayEnergy(state, addDays(now, i - span + 1)));
   const done = rows.filter((r) => r.logged && r.date < now); // skip today: the day is not over
   const total = done.reduce((a, r) => a + r.gap, 0);

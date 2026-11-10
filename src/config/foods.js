@@ -13,7 +13,6 @@ export const targets = {
   deficitMin: 200,
   deficitMax: 500,      // capped: bigger deficits are not recommended for teens
   proteinPerKg: 1.4,    // grams of protein per kg body weight
-  defaultHeightCm: 175, // used until you enter your own
 };
 
 export const SYSTEM_PROMPT = `You are a careful nutrition estimator for a teenager who eats a lot of Indian home food, street food, restaurant food and random snacks.

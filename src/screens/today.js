@@ -142,7 +142,7 @@ export function checkin(state, now, view) {
 
   // food
   const ft = dayTotals(state, now), tg = dailyTargets(state);
-  card.append(h('a', { class: 'ci-row food-link', href: '#/food' }, h('div', { class: 'ci-label' }, icon('food', 20), h('div', null, h('b', null, 'Food'), h('span', { class: 'muted' }, ft.n ? `${ft.kcal.toLocaleString()} of about ${tg.kcal.toLocaleString()} kcal` : 'Nothing logged yet'))), h('span', { class: 'btn small' }, 'Log food')));
+  card.append(h('a', { class: 'ci-row food-link', href: '#/food' }, h('div', { class: 'ci-label' }, icon('food', 20), h('div', null, h('b', null, 'Food'), h('span', { class: 'muted' }, ft.n ? (tg.ready ? `${ft.kcal.toLocaleString()} of about ${tg.kcal.toLocaleString()} kcal` : `${ft.kcal.toLocaleString()} kcal logged`) : 'Nothing logged yet'))), h('span', { class: 'btn small' }, 'Log food')));
 
   // weight
   const wt = state.weights[now];

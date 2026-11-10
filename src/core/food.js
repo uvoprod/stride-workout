@@ -14,14 +14,17 @@ export const getDeficit = () => Math.min(targets.deficitMax, Math.max(targets.de
 /** Estimated daily numbers. Rough on purpose: shown as "about". */
 export function dailyTargets(state = store.get()) {
   const p = state.profile || {};
-  const kg = weightSummary(state).now ?? p.startWeight ?? 90;
-  const h = p.heightCm || targets.defaultHeightCm;
-  const age = p.age || 17;
-  const bmr = 10 * kg + 6.25 * h - 5 * age + 5;
+  const kg = weightSummary(state).now ?? p.startWeight ?? null;
+  const missing = [];
+  if (!kg) missing.push('weight');
+  if (!p.heightCm) missing.push('height');
+  if (!p.age) missing.push('age');
+  if (missing.length) return { ready: false, missing };
+  const bmr = 10 * kg + 6.25 * p.heightCm - 5 * p.age + 5;
   const maintenance = bmr * targets.activity;
   const deficit = getDeficit();
   const kcal = Math.round(Math.max(maintenance - deficit, bmr) / 10) * 10; // never below BMR
-  return { kcal, maintenance: Math.round(maintenance / 10) * 10, bmr: Math.round(bmr), deficit: Math.round(maintenance - kcal), protein: Math.round((targets.proteinPerKg * kg) / 5) * 5, heightSet: !!p.heightCm, kg };
+  return { ready: true, kcal, maintenance: Math.round(maintenance / 10) * 10, bmr: Math.round(bmr), deficit: Math.round(maintenance - kcal), protein: Math.round((targets.proteinPerKg * kg) / 5) * 5, kg };
 }
 
 export const dayItems = (state, date) => state.food?.[date] || [];

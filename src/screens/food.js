@@ -17,7 +17,7 @@ export function renderFood(root) {
   const wrap = h('div', { class: 'screen food' });
   root.append(wrap);
   draw();
-  if (!store.get().profile.heightCm && !sessionStorage.getItem('stride.foodSetup')) { sessionStorage.setItem('stride.foodSetup', '1'); setTimeout(() => openSettings(draw), 300); }
+  if (!dailyTargets().ready && !sessionStorage.getItem('stride.foodSetup')) { sessionStorage.setItem('stride.foodSetup', '1'); setTimeout(() => openSettings(draw), 300); }
 
   function draw() {
     const state = store.get();
@@ -35,16 +35,24 @@ export function renderFood(root) {
       h('button', { class: 'icon-btn', 'aria-label': 'Next day', disabled: isToday, onclick: () => { fdate = addDays(fdate, 1); draw(); } }, icon('chev', 20))));
 
     // summary
-    const left = tg.kcal - tot.kcal;
-    const pct = Math.min(1, tot.kcal / tg.kcal);
-    const over = left < 0;
-    wrap.append(h('section', { class: `card food-sum${over ? ' over' : ''}` },
-      h('div', { class: 'eyebrow' }, over ? 'Over today’s target' : 'Left today'),
-      h('div', { class: 'metric' }, h('span', { class: 'display-xl' }, Math.abs(left).toLocaleString(), h('small', null, ' kcal')), h('span', { class: 'muted' }, `${tot.kcal.toLocaleString()} of about ${tg.kcal.toLocaleString()}`)),
-      h('div', { class: 'steps-track' }, h('div', { class: 'steps-fill', style: { transform: `scaleX(${pct})` } })),
-      h('div', { class: 'macros' }, macro('Protein', tot.protein, tg.protein, true), macro('Carbs', tot.carbs), macro('Fat', tot.fat)),
-      over ? h('p', { class: 'muted small' }, resetMessages[0].title + ' Just get back on plan with your next meal. No skipping meals to make up for it.')
-        : h('p', { class: 'muted small' }, `About ${tg.deficit} kcal under your estimated maintenance (${tg.maintenance.toLocaleString()}). Estimates are rough, so aim for the trend, not perfection.`)));
+    if (!tg.ready) {
+      wrap.append(h('section', { class: 'card food-sum' },
+        h('div', { class: 'eyebrow' }, 'Logged today'),
+        h('div', { class: 'metric' }, h('span', { class: 'display-xl' }, tot.kcal.toLocaleString(), h('small', null, ' kcal')), h('span', { class: 'muted' }, `P ${Math.round(tot.protein)} g · C ${Math.round(tot.carbs)} g · F ${Math.round(tot.fat)} g`)),
+        h('p', { class: 'muted' }, `To see a daily target, add your ${tg.missing.join(', ')} under Targets & AI. Nothing is assumed about you.`),
+        h('button', { class: 'btn', onclick: () => openSettings(draw) }, 'Set up targets')));
+    } else {
+      const left = tg.kcal - tot.kcal;
+      const pct = Math.min(1, tot.kcal / tg.kcal);
+      const over = left < 0;
+      wrap.append(h('section', { class: `card food-sum${over ? ' over' : ''}` },
+        h('div', { class: 'eyebrow' }, over ? 'Over today\u2019s target' : 'Left today'),
+        h('div', { class: 'metric' }, h('span', { class: 'display-xl' }, Math.abs(left).toLocaleString(), h('small', null, ' kcal')), h('span', { class: 'muted' }, `${tot.kcal.toLocaleString()} of about ${tg.kcal.toLocaleString()}`)),
+        h('div', { class: 'steps-track' }, h('div', { class: 'steps-fill', style: { transform: `scaleX(${pct})` } })),
+        h('div', { class: 'macros' }, macro('Protein', tot.protein, tg.protein, true), macro('Carbs', tot.carbs), macro('Fat', tot.fat)),
+        over ? h('p', { class: 'muted small' }, resetMessages[0].title + ' Just get back on plan with your next meal. No skipping meals to make up for it.')
+          : h('p', { class: 'muted small' }, `About ${tg.deficit} kcal under your estimated maintenance (${tg.maintenance.toLocaleString()}). Estimates are rough, so aim for the trend, not perfection.`)));
+    }
 
     // add
     const text = h('textarea', { class: 'txt', rows: 3, placeholder: 'What did you eat? e.g. 2 roti, 1 katori rajma, small bowl dahi', 'aria-label': 'Describe your meal' });
@@ -183,21 +191,26 @@ export function renderFood(root) {
 function openSettings(after) {
   const p = store.get().profile;
   const key = h('input', { class: 'txt-in', type: 'password', autocomplete: 'off', placeholder: 'sk-ant-…', value: getKey(), 'aria-label': 'Claude API key' });
-  const height = h('input', { class: 'txt-in', type: 'text', inputmode: 'numeric', placeholder: 'e.g. 175', value: p.heightCm || '', 'aria-label': 'Height in cm' });
+  const height = h('input', { class: 'txt-in', type: 'text', inputmode: 'numeric', placeholder: 'Height in cm', value: p.heightCm || '', 'aria-label': 'Height in cm' });
+  const age = h('input', { class: 'txt-in', type: 'text', inputmode: 'numeric', placeholder: 'Age in years', value: p.age || '', 'aria-label': 'Age in years' });
+  const needWeight = !p.startWeight && !Object.keys(store.get().weights).length;
+  const wt = h('input', { class: 'txt-in', type: 'text', inputmode: 'decimal', placeholder: 'Weight in kg', 'aria-label': 'Weight in kg' });
   const model = h('select', { class: 'txt-in', 'aria-label': 'AI model' }, models.map((m) => h('option', { value: m.id, selected: m.id === getModel() }, m.label)));
   const def = h('b', { class: 'display-l' }, `${getDeficit()}`);
   const slider = h('input', { type: 'range', min: targets.deficitMin, max: targets.deficitMax, step: 50, value: getDeficit(), 'aria-label': 'Daily calorie deficit', class: 'range' });
   const prev = h('p', { class: 'muted' });
   const calc = () => {
-    store.update((s) => { s.settings.deficit = Number(slider.value); const hh = parseInt(height.value, 10); if (hh >= 120 && hh <= 230) s.profile.heightCm = hh; });
+    store.update((s) => { s.settings.deficit = Number(slider.value); const hh = parseInt(height.value, 10); if (hh >= 120 && hh <= 230) s.profile.heightCm = hh; const aa = parseInt(age.value, 10); if (aa >= 10 && aa <= 90) s.profile.age = aa; const ww = parseFloat(wt.value.replace(',', '.')); if (needWeight && ww >= 30 && ww <= 250) s.profile.startWeight = ww; });
     const t = dailyTargets();
     def.textContent = slider.value;
-    prev.textContent = `Estimated maintenance ${t.maintenance.toLocaleString()} kcal. Your daily target: about ${t.kcal.toLocaleString()} kcal, protein about ${t.protein} g.${t.heightSet ? '' : ' Add your height for a better number.'}`;
+    prev.textContent = t.ready ? `Estimated maintenance ${t.maintenance.toLocaleString()} kcal. Your daily target: about ${t.kcal.toLocaleString()} kcal, protein about ${t.protein} g.` : `Add your ${t.missing.join(', ')} to see your daily target.`;
   };
-  slider.addEventListener('input', calc); height.addEventListener('input', calc);
+  slider.addEventListener('input', calc); [height, age, wt].forEach((i) => i.addEventListener('input', calc));
   calc();
   const sh = openSheet('Targets & AI', [
     h('label', { class: 'field' }, h('span', { class: 'eyebrow' }, 'Height (cm)'), height),
+    h('label', { class: 'field' }, h('span', { class: 'eyebrow' }, 'Age'), age),
+    needWeight ? h('label', { class: 'field' }, h('span', { class: 'eyebrow' }, 'Weight (kg)'), wt) : null,
     h('div', { class: 'field' }, h('span', { class: 'eyebrow' }, 'Daily deficit (kcal below maintenance)'), h('div', { class: 'row-between' }, slider, def)),
     prev,
     h('p', { class: 'muted small' }, `Capped at ${targets.deficitMax} kcal. A steady 0.25–0.5 kg a week is the goal, and your target never goes below your resting needs. You are still growing, so eat enough protein and never skip meals. If you are unsure, talk to a doctor or parent about your weight goals.`),

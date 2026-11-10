@@ -6,6 +6,10 @@ import { h } from '../ui/kit.js';
 export function energyCard(state) {
   const r = energyReport(state);
   const card = h('section', { class: 'card energy' }, h('div', { class: 'sec-head' }, h('h2', null, 'Does it add up?')));
+  if (r.ready === false) {
+    card.append(h('p', { class: 'muted' }, 'To estimate what you burn, the app needs your weight, height and age. Add them in Food, then Targets & AI.'), h('a', { class: 'btn', href: '#/food' }, 'Open Food'));
+    return card;
+  }
   if (!r.loggedDays) {
     card.append(h('p', { class: 'muted' }, 'Log your food for a few full days (tap Food) and this shows whether what you eat plus your workouts leaves you in a deficit.'));
     return card;
